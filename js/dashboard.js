@@ -40,7 +40,7 @@ monthFilter.value = "all";
 specialtyFilter.value = "all";
 
 Chart.defaults.font.family = '"DM Sans", sans-serif';
-Chart.defaults.color = "#77837d";
+Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue("--chart-text").trim();
 Chart.defaults.font.size = 10;
 
 const sharedOptions = {
@@ -93,6 +93,32 @@ const admissionsChart = new Chart(document.querySelector("#admissions-chart"), {
     }
   }
 });
+
+function updateChartTheme() {
+  const rootStyles = getComputedStyle(document.documentElement);
+  const textColor = rootStyles.getPropertyValue("--chart-text").trim();
+  const gridColor = rootStyles.getPropertyValue("--chart-grid").trim();
+  const surfaceColor = rootStyles.getPropertyValue("--chart-surface").trim();
+  const tooltipColor = rootStyles.getPropertyValue("--chart-tooltip-bg").trim();
+
+  Chart.defaults.color = textColor;
+  typeChart.data.datasets[0].borderColor = surfaceColor;
+  [specialtyChart, typeChart, admissionsChart].forEach((chart) => {
+    chart.options.plugins.tooltip.backgroundColor = tooltipColor;
+    chart.options.plugins.tooltip.titleColor = "#ffffff";
+    chart.options.plugins.tooltip.bodyColor = "#ffffff";
+    if (chart.options.scales) {
+      Object.values(chart.options.scales).forEach((scale) => {
+        scale.ticks.color = textColor;
+        if (scale.grid) scale.grid.color = gridColor;
+        if (scale.border) scale.border.color = gridColor;
+      });
+    }
+    chart.update("none");
+  });
+}
+
+window.addEventListener("themechange", updateChartTheme);
 
 function getSelectedMonths() {
   if (monthFilter.value === "all") return hospitalData.monthly.map((_, index) => index);
@@ -155,4 +181,5 @@ function updateDashboard() {
 
 monthFilter.addEventListener("change", updateDashboard);
 specialtyFilter.addEventListener("change", updateDashboard);
+updateChartTheme();
 updateDashboard();
